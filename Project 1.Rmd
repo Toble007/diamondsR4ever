@@ -279,7 +279,7 @@ df$clarity <- factor(clarity$clarity)
 ```
 
 
-```{r dataexplorationNumbers}
+```{r model exploration}
 library(faraway)
 library(MASS)
 result <- lm(price~(.)^2,df)
@@ -291,6 +291,9 @@ summary(result)
 reduced <- lm(price~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
 anova(reduced, result)
 #keep reduced model.
+result <- lm(price~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+reduced <- lm(price~carat+clarity+color+cut+carat*clarity+carat*color,df)
+anova(reduced, result)
 summary(reduced)
 #tried to remove a few other interative terms but didn't find anything else.
 ```
@@ -307,19 +310,19 @@ qqline(reduced$residuals, col = "red")
 #have some issues with the ends of the qq plot, hopefully fixes when nonlinear data is fixed.
 vif(reduced)
 #Multicolinearity detected in alot of variables.
-boxcox(df$price~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.415,0.44,0.001))
+boxcox(df$price~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color, lambda = seq(0.415,0.445,0.001))
 #testing a few transformations
-reduced_0.42 <- lm((price)^0.42~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+reduced_0.42 <- lm(price^0.42~carat+clarity+color+cut+carat*clarity+carat*color,df)
 summary(reduced_0.42)
-reduced_0.425 <- lm((price)^0.425~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+reduced_0.425 <- lm(price^0.425~carat+clarity+color+cut+carat*clarity+carat*color,df)
 summary(reduced_0.425)
-reduced_0.43 <- lm((price)^0.43~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+reduced_0.43 <- lm(price^0.43~carat+clarity+color+cut+carat*clarity+carat*color,df)
 summary(reduced_0.43)
-reduced_0.435 <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+reduced_0.435 <- lm(price^0.435~carat+clarity+color+cut+carat*clarity+carat*color,df)
 summary(reduced_0.435)
 #reduced_0.435 has highest adjusted r^2 so keeping that. differences are so small that doesn't really matter much.
 reduced <- reduced_0.435
-boxcox(df$price^0.435~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.8,1.2,0.01))
+boxcox(df$price^0.435~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color, lambda = seq(0.8,1.2,0.01))
 #clearly no further transformation is needed
 ```
 
@@ -381,7 +384,7 @@ pairwise <- glht(reduced, linfct=mcp(cut = "Tukey"))
 summary(pairwise)
 #looks ok
 
-reduced <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+reduced <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color,df)
 
 levene.test(df$price,df$color)
 #variance is good
@@ -398,44 +401,35 @@ p2 <- ggplot(df, aes(x=carat, y = price, color = color)) +
   ylab("Price ($USD)") +
   scale_y_continuous(labels=scales::dollar_format())
 plot(p2)
-summary(reduced)
-#let's try
-color <- subset(df,select = c("color"))
-color <- lapply(color, as.character)
-num = 0
-for (variable in color$color) {
-  num = num+1
-  if (variable == 'J' | variable == 'FGHI'){
-    color[[1]][num] = "FGHIJ"
-  }
-}
-df$color <- factor(color$color)
+#maybe not
 
-reduced <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
-
-levene.test(df$price,df$color)
-#variance is good
-
-pairwise <- glht(reduced, linfct=mcp(color = "Tukey"))
-summary(pairwise)
 #i think this is good enough
 ```
 
+```{r model exploration 2}
+reduced <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color,df)
+result <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut,df)
+anova(reduced, result)
+#keep result model
+summary(result)
+```
+
+
 ```{r refit power}
-boxcox(df$price~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.39,0.425,0.001))
-reduced_0.395 <- lm((price)^0.395~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
-summary(reduced_0.395)
-reduced_0.4 <- lm((price)^0.4~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
-summary(reduced_0.4)
-reduced_0.405 <- lm((price)^0.405~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
-summary(reduced_0.405)
+boxcox(df$price~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut, lambda = seq(0.405,0.435,0.001))
 reduced_0.41 <- lm((price)^0.41~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
 summary(reduced_0.41)
 reduced_0.415 <- lm((price)^0.415~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
 summary(reduced_0.415)
-#reduced_0.415 has highest adjusted r^2 so keeping that. differences are so small that doesn't really matter much.
-reduced <- reduced_0.415
-boxcox(df$price^0.415~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.8,1.2,0.01))
+reduced_0.42 <- lm((price)^0.42~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.42)
+reduced_0.425 <- lm((price)^0.425~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.425)
+reduced_0.43 <- lm((price)^0.43~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.43)
+#reduced_0.413 has highest adjusted r^2 so keeping that. differences are so small that doesn't really matter much.
+reduced <- reduced_0.43
+boxcox(df$price^0.43~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.8,1.2,0.01))
 ```
 
 ```{r final look at model assumptions}
@@ -443,12 +437,13 @@ plot(reduced$fitted.values,reduced$residuals, main = "Plot of Residuals against 
 abline(h=0, col ="red")
 #still have variance issue. unsure how to resolve these
 acf(reduced$residuals)
-#autocorrelation at lag 25
+#no autocorrelation
 qqnorm(reduced$residuals)
 qqline(reduced$residuals, col = "red")
 #still have some issues with the ends of the qq plot unsure how to resolve
 vif(reduced)
 #Multicolinearity still heavily detected
+summary(reduced)
 ```
 
 ## Model Building Process
