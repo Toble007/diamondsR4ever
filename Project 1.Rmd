@@ -1,0 +1,456 @@
+---
+title: 'STAT 6021 : Project 1'
+author: "Thomas Butler"
+date: "March 24, 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r input data}
+df = read.csv("diamonds4.csv")
+levels(df$clarity)
+levels(df$color)
+levels(df$cut)
+for (variable in levels(df$clarity)) 
+  {
+  assign(variable,subset(df,clarity==variable))
+}
+for (variable in levels(df$clarity)) 
+  {
+  assign(as.character(paste0(variable,"_lm")),lm(price~carat, data = subset(df,clarity==variable)))
+  }
+```
+
+## Executive Summary
+
+## Detailed Data Description
+
+## Data Exploration
+```{r dataexplorationVisuals cut}
+library(ggplot2)
+p0 <- ggplot(df) +
+  geom_point(aes(x=carat, y=price)) +
+  stat_smooth(data = df, method="lm", aes(x=carat, y=price)) +
+  labs(title="Price per Carat") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+a1 <- subset(df, cut=="Good")
+a2 <- subset(df, cut=="Very Good")
+a3 <- subset(df, cut=="Ideal")
+a4 <- subset(df, cut=="Astor Ideal")
+p1 <- ggplot(a1) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = a1, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Good Cut") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p2 <- ggplot(a2) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = a2, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Very Good Cut") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p3 <- ggplot(a3) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = a3, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Ideal Cut") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p4 <- ggplot(a4) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = a4, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Astor Ideal Cut") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p0)
+#looks nonlinear
+plot(p1)
+plot(p2)
+plot(p3)
+plot(p4)
+```
+```{r}
+p1 <- ggplot(df, aes(x=carat, y = price, color = cut)) + 
+  geom_point(aes(color = factor(cut))) +
+  stat_smooth(data = df, method = "lm") +
+  labs(title="Price per Carat, Cut by Color") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p1)
+#good, ideal, and very good cuts seem very similar
+cut <- subset(df,select = c("cut"))
+cut <- lapply(cut, as.character)
+num = 0
+for (variable in cut$cut) {
+  num = num+1
+  if (variable == 'Good' | variable == 'Ideal'){
+    cut[[1]][num] = "Very Ideal Good"
+  }
+  if (variable == "Very Good"){
+    cut[[1]][num] = "Very Ideal Good"
+  }
+}
+df$cut <- factor(cut$cut)
+p1 <- ggplot(df, aes(x=carat, y = price, color = cut)) + 
+  geom_point(aes(color = factor(cut))) +
+  stat_smooth(data = df, method = "lm") +
+  labs(title="Price per Carat, Cut by Color") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p1)
+#looks good for now
+p2 <- ggplot(df, aes(x=carat, y = price, color = color)) + 
+  geom_point(aes(color = factor(color))) +
+  stat_smooth(data = df, method = "lm") +
+  labs(title="Price per Carat, Color by Color") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p2)
+#G and H and D and E are very close to each other
+color <- subset(df,select = c("color"))
+color <- lapply(color, as.character)
+num = 0
+for (variable in color$color) {
+  num = num+1
+  if (variable == 'G' | variable == 'H'){
+    color[[1]][num] = "GH"
+  }
+  if (variable == 'D' | variable == 'E'){
+    color[[1]][num] = "DE"
+  }
+}
+df$color <- factor(color$color)
+p2 <- ggplot(df, aes(x=carat, y = price, color = color)) + 
+  geom_point(aes(color = factor(color))) +
+  stat_smooth(data = df, method = "lm") +
+  labs(title="Price per Carat, Color by Color") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p2)
+#looks good for now
+```
+
+
+```{r dataexplorationVisuals clarity}
+p1 <- ggplot(FL) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = FL, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity FL") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p2 <- ggplot(IF) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = IF, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity IF") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p3 <- ggplot(SI1) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = SI1, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity SI1") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p4 <- ggplot(SI2) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = SI2, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity SI2") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p5 <- ggplot(VS1) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = VS1, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity VS1") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p6 <- ggplot(VS2) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = VS2, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity VS2") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p7 <- ggplot(VVS1) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = VVS1, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity VVS1") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+p8 <- ggplot(VVS2) + 
+  geom_point(aes(x=carat, y = price, color=color)) +
+  stat_smooth(data = VVS2, method = "lm", aes(x=carat, y=price, color=color)) +
+  labs(title="Price per Carat by Color, Clarity VVS2") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p1)
+plot(p2)
+plot(p3)
+plot(p4)
+plot(p5)
+plot(p6)
+plot(p7)
+plot(p8)
+#Remove FL factor cause 3 datapoints
+df <- subset(df, clarity!="FL")
+```
+
+
+```{r combine factors Clarity}
+#checking to see if variables can be collapsed since blue nile describes these together.
+plot(SI1$carat,SI1$price,main = "Price per Carat for SI1 and SI2")
+points(SI2$carat,SI2$price, pch=2, col = "red")
+abline(SI1_lm,lty=1)
+abline(SI2_lm,lty=2,col="red")
+legend("topleft", c("SI1","SI2"), lty=c(1,2), pch=c(1,2),
+col=c("black","red"))
+plot(VS1$carat,VS1$price,main = "Price per Carat for VS1 and VS2")
+points(VS2$carat,VS2$price, pch=2, col = "red")
+abline(VS1_lm,lty=1)
+abline(VS2_lm,lty=2,col="red")
+legend("topleft", c("VS1","VS2"), lty=c(1,2), pch=c(1,2),
+col=c("black","red"))
+plot(VVS1$carat,VVS1$price,main = "Price per Carat for VVS1 and VVS2")
+points(VVS2$carat,VVS2$price, pch=2, col = "red")
+abline(VVS1_lm,lty=1)
+abline(VVS2_lm,lty=2,col="red")
+legend("topleft", c("VVS1","VVS2"), lty=c(1,2), pch=c(1,2),
+col=c("black","red"))
+plot(SI1$carat,SI1$price,main = "Price per Carat for SI1 and VVS2")
+points(VVS2$carat,VVS2$price, pch=2, col = "red")
+abline(SI1_lm,lty=1)
+abline(VVS2_lm,lty=2,col="red")
+legend("topleft", c("SI1","VVS2"), lty=c(1,2), pch=c(1,2),
+col=c("black","red"))
+#I think it is ok to combine VS1 and VS2 to VS, and VVS1 and VVS2 to VVS since Blue Nile classifies them in the same category. I think SI1 and SI2 are different enough to be separate.
+clarity <- subset(df,select = c("clarity"))
+clarity <- lapply(clarity, as.character)
+#https://stackoverflow.com/questions/2851015/convert-data-frame-columns-from-factors-to-characters
+num = 0
+for (variable in clarity$clarity) {
+  num = num+1
+  if (variable == 'VS1' | variable == 'VS2'){
+    clarity[[1]][num] = "VS"
+  }
+  if (variable == 'VVS1' | variable == 'VVS2'){
+    clarity[[1]][num] = "VVS"
+  }
+}
+df$clarity <- factor(clarity$clarity)
+VS <- subset(df,clarity=="VS")
+VVS <- subset(df,clarity=="VVS")
+VS_lm <- lm(price~carat, data = subset(df,clarity=="VS"))
+VVS_lm <- lm(price~carat, data = subset(df,clarity=="VVS"))
+plot(VS$carat,VS$price,main = "Price per Carat for VS and VVS")
+points(VVS$carat,VVS$price, pch=2, col = "red")
+abline(VS_lm,lty=1)
+abline(VVS_lm,lty=2,col="red")
+legend("topleft", c("VS","VVS"), lty=c(1,2), pch=c(1,2),
+col=c("black","red"))
+#so collapse VS with VVS
+clarity <- subset(df,select = c("clarity"))
+clarity <- lapply(clarity, as.character)
+num = 0
+for (variable in clarity$clarity) {
+  num = num+1
+  if (variable == 'VS' | variable == 'VVS'){
+    clarity[[1]][num] = "V_VS"
+  }
+}
+df$clarity <- factor(clarity$clarity)
+```
+
+
+```{r dataexplorationNumbers}
+library(faraway)
+library(MASS)
+result <- lm(price~(.)^2,df)
+reduced <- lm(price~.,df)
+anova(reduced, result)
+#second order terms are significant, keep result model
+summary(result)
+#not all interactive terms seem significant so lets cut the ones that aren't out.
+reduced <- lm(price~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+anova(reduced, result)
+#keep reduced model.
+summary(reduced)
+#tried to remove a few other interative terms but didn't find anything else.
+```
+
+
+```{r check and fix assumptions}
+plot(reduced$fitted.values,reduced$residuals, main = "Plot of Residuals against Fitted Values")
+abline(h=0, col ="red")
+#looks like the data is nonlinear and have a issue with variance.
+acf(reduced$residuals)
+#there is some autocorrelation
+qqnorm(reduced$residuals)
+qqline(reduced$residuals, col = "red")
+#have some issues with the ends of the qq plot, hopefully fixes when nonlinear data is fixed.
+vif(reduced)
+#Multicolinearity detected in alot of variables.
+boxcox(df$price~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.415,0.44,0.001))
+#testing a few transformations
+reduced_0.42 <- lm((price)^0.42~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.42)
+reduced_0.425 <- lm((price)^0.425~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.425)
+reduced_0.43 <- lm((price)^0.43~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.43)
+reduced_0.435 <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.435)
+#reduced_0.435 has highest adjusted r^2 so keeping that. differences are so small that doesn't really matter much.
+reduced <- reduced_0.435
+boxcox(df$price^0.435~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.8,1.2,0.01))
+#clearly no further transformation is needed
+```
+
+```{r check and fix assumptions 2}
+plot(reduced$fitted.values,reduced$residuals, main = "Plot of Residuals against Fitted Values")
+abline(h=0, col ="red")
+#still have variance issue.
+acf(reduced$residuals)
+#autocorrelation seems fine
+qqnorm(reduced$residuals)
+qqline(reduced$residuals, col = "red")
+#still have some issues with the ends of the qq plot, maybe fixing variance will fix.
+vif(reduced)
+#Multicolinearity still heavily detected
+#maybe have to fix categorical variables to fix variance
+```
+
+Note: I have no idea how to deal with the interactive terms for this section.
+```{r check categorical variable mean and variance}
+library(lawstat)
+levene.test(df$price,df$clarity)
+levene.test(df$price,df$color)
+levene.test(df$price,df$cut)
+#see that clarity is fine but color and cut have issues with variance
+
+library(multcomp)
+pairwise <- glht(reduced, linfct=mcp(clarity = "Tukey"))
+summary(pairwise)
+
+#Should I collapse SI1 and IF?
+plot(SI1$carat,SI1$price,main = "Price per Carat for SI1 and IF")
+points(IF$carat,IF$price, pch=2, col = "red")
+abline(SI1_lm,lty=1)
+abline(IF_lm,lty=2,col="red")
+legend("topleft", c("SI1","IF"), lty=c(1,2), pch=c(1,2),
+col=c("black","red"))
+#maybe not
+
+pairwise <- glht(reduced, linfct=mcp(color = "Tukey"))
+summary(pairwise)
+
+#collapsing F and I with GH 
+#looked at graph above to determine which factors to collapse
+color <- subset(df,select = c("color"))
+color <- lapply(color, as.character)
+num = 0
+for (variable in color$color) {
+  num = num+1
+  if (variable == 'F' | variable == 'I'){
+    color[[1]][num] = "FGHI"
+  }
+  if (variable == 'GH'){
+    color[[1]][num] = "FGHI"
+  }
+}
+df$color <- factor(color$color)
+
+pairwise <- glht(reduced, linfct=mcp(cut = "Tukey"))
+summary(pairwise)
+#looks ok
+
+reduced <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+
+levene.test(df$price,df$color)
+#variance is good
+
+pairwise <- glht(reduced, linfct=mcp(color = "Tukey"))
+summary(pairwise)
+
+#Should I collapse J with FGHI?
+p2 <- ggplot(df, aes(x=carat, y = price, color = color)) + 
+  geom_point(aes(color = factor(color))) +
+  stat_smooth(data = df, method = "lm") +
+  labs(title="Price per Carat, Color by Color") +
+  xlab("Carat") + 
+  ylab("Price ($USD)") +
+  scale_y_continuous(labels=scales::dollar_format())
+plot(p2)
+summary(reduced)
+#let's try
+color <- subset(df,select = c("color"))
+color <- lapply(color, as.character)
+num = 0
+for (variable in color$color) {
+  num = num+1
+  if (variable == 'J' | variable == 'FGHI'){
+    color[[1]][num] = "FGHIJ"
+  }
+}
+df$color <- factor(color$color)
+
+reduced <- lm((price)^0.435~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+
+levene.test(df$price,df$color)
+#variance is good
+
+pairwise <- glht(reduced, linfct=mcp(color = "Tukey"))
+summary(pairwise)
+#i think this is good enough
+```
+
+```{r refit power}
+boxcox(df$price~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.39,0.425,0.001))
+reduced_0.395 <- lm((price)^0.395~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.395)
+reduced_0.4 <- lm((price)^0.4~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.4)
+reduced_0.405 <- lm((price)^0.405~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.405)
+reduced_0.41 <- lm((price)^0.41~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.41)
+reduced_0.415 <- lm((price)^0.415~carat+clarity+color+cut+carat*clarity+carat*color+carat*cut+color*cut,df)
+summary(reduced_0.415)
+#reduced_0.415 has highest adjusted r^2 so keeping that. differences are so small that doesn't really matter much.
+reduced <- reduced_0.415
+boxcox(df$price^0.415~df$carat+df$clarity+df$color+df$cut+df$carat*df$clarity+df$carat*df$color+df$carat*df$cut+df$color*df$cut, lambda = seq(0.8,1.2,0.01))
+```
+
+```{r final look at model assumptions}
+plot(reduced$fitted.values,reduced$residuals, main = "Plot of Residuals against Fitted Values")
+abline(h=0, col ="red")
+#still have variance issue. unsure how to resolve these
+acf(reduced$residuals)
+#autocorrelation at lag 25
+qqnorm(reduced$residuals)
+qqline(reduced$residuals, col = "red")
+#still have some issues with the ends of the qq plot unsure how to resolve
+vif(reduced)
+#Multicolinearity still heavily detected
+```
+
+## Model Building Process
+
+## Conclusions
